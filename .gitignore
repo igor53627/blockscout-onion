@@ -1,0 +1,16 @@
+# Hidden service keys - DO NOT COMMIT
+hidden_service/
+*.key
+hs_ed25519_secret_key
+hs_ed25519_public_key
+
+# Backup files
+*.tar.gz
+*.backup
+
+# Docker
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db

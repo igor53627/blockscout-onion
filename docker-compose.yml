@@ -1,0 +1,21 @@
+services:
+  tor-hidden-service:
+    build: .
+    container_name: blockscout-tor-bridge
+    restart: unless-stopped
+    volumes:
+      - ./hidden_service:/var/lib/tor/hidden_service
+    ports:
+      - "9050:9050"  # SOCKS proxy (optional)
+      - "9051:9051"  # Control port (optional)
+    networks:
+      - tor-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--socks5-hostname", "localhost:9050", "http://check.torproject.org"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+networks:
+  tor-network:
+    driver: bridge

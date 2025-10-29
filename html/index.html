@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockscout Onion Service - Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .status {
+            background: #10b981;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .info {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .info p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        .onion-address {
+            font-family: 'Courier New', monospace;
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+        .footer {
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 0.9em;
+        }
+        .check-mark {
+            font-size: 4em;
+            color: #10b981;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="check-mark">✓</div>
+        <h1>Tor Hidden Service Active!</h1>
+
+        <div class="status">
+            🟢 ONLINE AND WORKING
+        </div>
+
+        <div class="info">
+            <p><strong>Service:</strong> Blockscout Ethereum Explorer</p>
+            <p><strong>Status:</strong> Successfully connected through Tor network</p>
+            <p><strong>Type:</strong> Tor Hidden Service v3</p>
+            <p><strong>Mode:</strong> Standard (3-hop circuits)</p>
+        </div>
+
+        <div class="info">
+            <p><strong>Your .onion address:</strong></p>
+            <p class="onion-address">7lxb5y5sikmt4nmsm37yq567q3zazgsxmyapjs7azssoaojxna6kftid.onion</p>
+        </div>
+
+        <div class="footer">
+            <p>If you can see this page, your Tor hidden service is working correctly!</p>
+            <p>Nginx proxy is operational • Tor circuits are established • Hidden service descriptor is published</p>
+        </div>
+    </div>
+</body>
+</html>

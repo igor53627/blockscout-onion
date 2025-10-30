@@ -91,7 +91,21 @@ jobs:
         done
 
         echo "❌ .onion address file not created after $((max_attempts * 2)) seconds"
-        echo "Tor logs:"
+        echo ""
+        echo "=== Debug: Checking file locations ==="
+        echo "Host tor_data directory:"
+        ls -la tor_data/ || echo "tor_data directory not found"
+        echo ""
+        echo "Host tor_data/hidden_service directory:"
+        ls -la tor_data/hidden_service/ || echo "hidden_service directory not found"
+        echo ""
+        echo "Inside container /var/lib/tor:"
+        docker exec blockscout-tor ls -la /var/lib/tor/ || echo "Failed to list"
+        echo ""
+        echo "Inside container /var/lib/tor/hidden_service:"
+        docker exec blockscout-tor ls -la /var/lib/tor/hidden_service/ || echo "Failed to list"
+        echo ""
+        echo "=== Tor logs ==="
         docker compose logs tor
         exit 1
 

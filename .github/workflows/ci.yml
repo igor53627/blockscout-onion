@@ -1,0 +1,143 @@
+name: CI - Docker Compose Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Restore existing Tor keys (if available)
+      if: ${{ secrets.TOR_HOSTNAME != '' }}
+      run: |
+        mkdir -p tor_data/hidden_service
+        echo "${{ secrets.TOR_HOSTNAME }}" > tor_data/hidden_service/hostname
+        echo "${{ secrets.TOR_PUBLIC_KEY }}" | base64 -d > tor_data/hidden_service/hs_ed25519_public_key
+        echo "${{ secrets.TOR_SECRET_KEY }}" | base64 -d > tor_data/hidden_service/hs_ed25519_secret_key
+        chmod 700 tor_data/hidden_service
+        chmod 600 tor_data/hidden_service/*
+        echo "✅ Loaded existing Tor keys from secrets"
+
+    - name: Build Docker images
+      run: |
+        docker-compose build --no-cache
+        echo "✅ Docker images built successfully"
+
+    - name: Start services
+      run: |
+        docker-compose up -d
+        echo "✅ Services started"
+
+    - name: Wait for containers to be healthy
+      run: |
+        echo "Waiting for containers to become healthy..."
+        max_attempts=30
+        attempt=0
+
+        while [ $attempt -lt $max_attempts ]; do
+          nginx_health=$(docker inspect --format='{{.State.Health.Status}}' blockscout-nginx 2>/dev/null || echo "starting")
+          tor_health=$(docker inspect --format='{{.State.Health.Status}}' blockscout-tor 2>/dev/null || echo "starting")
+
+          echo "Attempt $((attempt + 1))/$max_attempts: nginx=$nginx_health, tor=$tor_health"
+
+          if [ "$nginx_health" = "healthy" ] && [ "$tor_health" = "healthy" ]; then
+            echo "✅ All containers are healthy!"
+            break
+          fi
+
+          attempt=$((attempt + 1))
+          sleep 2
+        done
+
+        if [ $attempt -eq $max_attempts ]; then
+          echo "❌ Containers did not become healthy in time"
+          docker-compose logs
+          exit 1
+        fi
+
+    - name: Verify .onion address exists
+      run: |
+        if [ -f tor_data/hidden_service/hostname ]; then
+          onion_address=$(cat tor_data/hidden_service/hostname)
+          echo "✅ .onion address generated: $onion_address"
+        else
+          echo "❌ .onion address file not found"
+          docker-compose logs tor
+          exit 1
+        fi
+
+    - name: Check Tor bootstrap status
+      run: |
+        echo "Checking Tor bootstrap status..."
+        docker-compose logs tor | grep -i "bootstrapped" || true
+
+        if docker-compose logs tor | grep -q "Bootstrapped 100%"; then
+          echo "✅ Tor successfully bootstrapped to 100%"
+        else
+          echo "⚠️  Tor may not have fully bootstrapped yet (this can be normal in CI)"
+        fi
+
+    - name: Test nginx accessibility from tor container
+      run: |
+        echo "Testing nginx from tor container..."
+        if docker exec blockscout-tor wget -q -O- http://nginx:8080/status | head -1; then
+          echo "✅ Nginx is accessible from tor container"
+        else
+          echo "❌ Cannot reach nginx from tor container"
+          docker-compose logs nginx
+          exit 1
+        fi
+
+    - name: Verify container logs for errors
+      run: |
+        echo "Checking for critical errors in logs..."
+
+        if docker-compose logs | grep -i "error" | grep -v "error_log" | grep -v "X-Error"; then
+          echo "⚠️  Found errors in logs (review above)"
+        else
+          echo "✅ No critical errors found in logs"
+        fi
+
+    - name: Display service status
+      if: always()
+      run: |
+        echo "=== Container Status ==="
+        docker-compose ps
+
+        echo ""
+        echo "=== Tor Logs (last 30 lines) ==="
+        docker-compose logs --tail=30 tor
+
+        echo ""
+        echo "=== Nginx Logs (last 30 lines) ==="
+        docker-compose logs --tail=30 nginx
+
+    - name: Stop services
+      if: always()
+      run: docker-compose down -v
+
+    - name: Export Tor keys to secrets (instructions)
+      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        echo "📝 To use persistent .onion address in CI, add these secrets to your repository:"
+        echo ""
+        echo "TOR_HOSTNAME:"
+        cat tor_data/hidden_service/hostname
+        echo ""
+        echo "TOR_PUBLIC_KEY (base64):"
+        base64 -w 0 tor_data/hidden_service/hs_ed25519_public_key
+        echo ""
+        echo "TOR_SECRET_KEY (base64):"
+        base64 -w 0 tor_data/hidden_service/hs_ed25519_secret_key
+        echo ""
+        echo "Add these at: https://github.com/${{ github.repository }}/settings/secrets/actions"

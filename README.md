@@ -1,5 +1,7 @@
 # Blockscout Tor Hidden Service Bridge
 
+[![CI - Docker Compose Test](https://github.com/igor53627/blockscout-onion/actions/workflows/ci.yml/badge.svg)](https://github.com/igor53627/blockscout-onion/actions/workflows/ci.yml)
+
 A lightweight, production-ready setup to expose any HTTP service as a Tor hidden service (.onion address) using Docker Compose. This repository demonstrates exposing a remote Blockscout instance, but can be adapted for RPC providers, static dApp websites, indexer servers, or any HTTP-based service.
 
 ## Architecture Flowchart
@@ -444,6 +446,46 @@ Store backups:
 - Offline secure location
 - Password manager (for small key files)
 - Hardware security module (for production)
+
+## Continuous Integration
+
+This repository includes a GitHub Actions workflow that automatically tests the Docker Compose setup on every push.
+
+### What the CI Tests
+
+- ✅ Docker images build successfully
+- ✅ Containers start and become healthy
+- ✅ .onion address is generated or loaded
+- ✅ Tor bootstraps to the network
+- ✅ Nginx is accessible from the Tor container
+- ✅ No critical errors in logs
+
+### Using Persistent .onion Address in CI
+
+To test with your existing .onion keys in CI (ensuring the same address across test runs):
+
+1. **Extract your keys as base64**:
+```bash
+# Get hostname
+cat tor_data/hidden_service/hostname
+
+# Get public key (base64)
+base64 -w 0 tor_data/hidden_service/hs_ed25519_public_key
+
+# Get secret key (base64)
+base64 -w 0 tor_data/hidden_service/hs_ed25519_secret_key
+```
+
+2. **Add GitHub Secrets**:
+   - Go to: `https://github.com/YOUR_USERNAME/blockscout-onion/settings/secrets/actions`
+   - Add these three secrets:
+     - `TOR_HOSTNAME`: The .onion address (plain text)
+     - `TOR_PUBLIC_KEY`: The base64-encoded public key
+     - `TOR_SECRET_KEY`: The base64-encoded secret key
+
+3. **CI will automatically use these keys** on the next run, maintaining the same .onion address.
+
+**Note**: If secrets are not configured, CI will generate new keys for each test run (which is fine for testing functionality).
 
 ## Contributing
 

@@ -16,3 +16,4 @@ hs_ed25519_public_key
 .DS_Store
 Thumbs.db
 # Testing SSH signing
+# SSH signing configured

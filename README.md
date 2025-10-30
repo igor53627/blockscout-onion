@@ -28,6 +28,7 @@ flowchart TD
 - **Persistent Keys**: Supports using existing .onion addresses
 - **Production-Ready**: Automatic restarts, health checks, and proper logging
 - **Security-Focused**: Explicitly disables exit relay and control port to prevent abuse
+- **CI/CD Ready**: GitHub Actions workflow for automated testing ([see CI.md](CI.md))
 
 ## Why This Approach?
 
@@ -447,49 +448,11 @@ Store backups:
 - Password manager (for small key files)
 - Hardware security module (for production)
 
-## Continuous Integration
-
-This repository includes a GitHub Actions workflow that automatically tests the Docker Compose setup on every push.
-
-### What the CI Tests
-
-- ✅ Docker images build successfully
-- ✅ Containers start and become healthy
-- ✅ .onion address is generated or loaded
-- ✅ Tor bootstraps to the network
-- ✅ Nginx is accessible from the Tor container
-- ✅ No critical errors in logs
-
-### Using Persistent .onion Address in CI
-
-To test with your existing .onion keys in CI (ensuring the same address across test runs):
-
-1. **Extract your keys as base64**:
-```bash
-# Get hostname
-cat tor_data/hidden_service/hostname
-
-# Get public key (base64)
-base64 -w 0 tor_data/hidden_service/hs_ed25519_public_key
-
-# Get secret key (base64)
-base64 -w 0 tor_data/hidden_service/hs_ed25519_secret_key
-```
-
-2. **Add GitHub Secrets**:
-   - Go to: `https://github.com/YOUR_USERNAME/blockscout-onion/settings/secrets/actions`
-   - Add these three secrets:
-     - `TOR_HOSTNAME`: The .onion address (plain text)
-     - `TOR_PUBLIC_KEY`: The base64-encoded public key
-     - `TOR_SECRET_KEY`: The base64-encoded secret key
-
-3. **CI will automatically use these keys** on the next run, maintaining the same .onion address.
-
-**Note**: If secrets are not configured, CI will generate new keys for each test run (which is fine for testing functionality).
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+For information about the automated testing setup, see [CI.md](CI.md).
 
 ## License
 

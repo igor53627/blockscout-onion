@@ -10,12 +10,6 @@ flowchart LR
     B -->|routed to| C[Tor Container<br/>Port 80]
     C -->|forwards to| D[Nginx Container<br/>Port 8080]
     D -->|HTTP proxy| E[Remote Service<br/>e.g., Blockscout at 5.9.87.214:80<br/>or RPC at :8545]
-
-    style A fill:#9370DB
-    style B fill:#FF6B6B
-    style C fill:#4ECDC4
-    style D fill:#45B7D1
-    style E fill:#96CEB4
 ```
 
 ## Features
@@ -69,7 +63,9 @@ This prevents:
 
 ## Comparison with OnionSpray
 
-[OnionSpray](https://gitlab.torproject.org/tpo/onion-services/onionspray) is a more heavyweight, feature-rich tool for managing Tor hidden services.
+[OnionSpray](https://gitlab.torproject.org/tpo/onion-services/onionspray) is an official Tor Project tool designed for production-grade hidden service deployments. It's a comprehensive Python-based framework that handles complex scenarios like load balancing across multiple backend servers, managing multiple hidden services simultaneously, and sophisticated traffic routing. OnionSpray is ideal for organizations running large-scale infrastructure where reliability and redundancy are critical.
+
+For simpler use cases where you need to expose a single HTTP service via Tor, this Docker Compose setup provides a more lightweight and maintainable alternative.
 
 | Feature | This Setup | OnionSpray |
 |---------|-----------|------------|
@@ -258,6 +254,20 @@ docker-compose logs nginx | grep error
 ## Generating a Vanity .onion Address
 
 Vanity addresses are custom .onion addresses with a recognizable prefix (e.g., `blockscout...onion`).
+
+**Important**: Vanity address generation can take hours to weeks depending on the desired prefix length. We **strongly recommend** running the generation process in a terminal multiplexer like `tmux` or `screen` to prevent interruption if your SSH session disconnects or your terminal closes.
+
+```bash
+# Start a tmux session
+tmux new -s vanity-gen
+
+# Or use screen
+screen -S vanity-gen
+
+# Run your vanity generation command here
+# Detach with: Ctrl+b, then d (tmux) or Ctrl+a, then d (screen)
+# Reattach with: tmux attach -t vanity-gen (or screen -r vanity-gen)
+```
 
 ### Benefits
 - **Memorable**: Easier for users to remember and recognize

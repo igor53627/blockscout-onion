@@ -72,16 +72,28 @@ jobs:
           exit 1
         fi
 
-    - name: Verify .onion address exists
+    - name: Wait for .onion address generation
       run: |
-        if [ -f tor_data/hidden_service/hostname ]; then
-          onion_address=$(cat tor_data/hidden_service/hostname)
-          echo "✅ .onion address generated: $onion_address"
-        else
-          echo "❌ .onion address file not found"
-          docker compose logs tor
-          exit 1
-        fi
+        echo "Waiting for Tor to generate .onion address..."
+        max_attempts=60
+        attempt=0
+
+        while [ $attempt -lt $max_attempts ]; do
+          if [ -f tor_data/hidden_service/hostname ]; then
+            onion_address=$(cat tor_data/hidden_service/hostname)
+            echo "✅ .onion address generated: $onion_address"
+            exit 0
+          fi
+
+          echo "Attempt $((attempt + 1))/$max_attempts: waiting for hostname file..."
+          attempt=$((attempt + 1))
+          sleep 2
+        done
+
+        echo "❌ .onion address file not created after $((max_attempts * 2)) seconds"
+        echo "Tor logs:"
+        docker compose logs tor
+        exit 1
 
     - name: Check Tor bootstrap status
       run: |

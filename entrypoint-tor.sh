@@ -3,6 +3,11 @@ set -e
 
 echo "Starting Tor Hidden Service for Blockscout..."
 
+# Ensure correct permissions on tor data directory
+# This is needed when volume is mounted, as it may be owned by root
+chown -R tor:tor /var/lib/tor
+chmod 700 /var/lib/tor
+
 # Wait for nginx to be reachable
 echo "Waiting for nginx to be ready..."
 max_attempts=30

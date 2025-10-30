@@ -1,5 +1,26 @@
 # Management Commands
 
+## Essential Commands
+
+Quick reference for the most common operations:
+
+```bash
+# Start service
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Get .onion address
+cat tor_data/hidden_service/hostname
+
+# Check status
+docker compose ps
+
+# Stop service
+docker compose down
+```
+
 ## Basic Operations
 
 ### Start the Service

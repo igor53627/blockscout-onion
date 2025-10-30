@@ -69,25 +69,6 @@ This prevents:
 - Unauthorized access via SOCKS proxy
 - Control port exploitation
 
-## Comparison with OnionSpray
-
-[OnionSpray](https://gitlab.torproject.org/tpo/onion-services/onionspray) is an official Tor Project tool designed for production-grade hidden service deployments. It's a comprehensive Python-based framework that handles complex scenarios like load balancing across multiple backend servers, managing multiple hidden services simultaneously, and sophisticated traffic routing. OnionSpray is ideal for organizations running large-scale infrastructure where reliability and redundancy are critical.
-
-For simpler use cases where you need to expose a single HTTP service via Tor, this Docker Compose setup provides a more lightweight and maintainable alternative.
-
-| Feature | This Setup | OnionSpray |
-|---------|-----------|------------|
-| **Complexity** | Simple Docker Compose | Comprehensive framework |
-| **Dependencies** | Docker only | Python, additional tools |
-| **Use Case** | Single service proxying | Multiple services, load balancing |
-| **Setup Time** | < 5 minutes | Longer configuration |
-| **Customization** | Direct file editing | Configuration system |
-| **Best For** | Quick deployments, single services | Enterprise, multi-service setups |
-
-**When to use this setup**: You want a simple, maintainable solution for exposing one HTTP service via Tor.
-
-**When to use OnionSpray**: You need advanced features like load balancing, multiple hidden services, or complex routing.
-
 ## Directory Structure
 
 ```
@@ -170,29 +151,7 @@ Open Tor Browser and visit:
 - **[Management Commands](docs/MANAGEMENT.md)** - Start, stop, restart, monitor
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Customize Tor, Nginx, Docker settings
 - **[Backup Guide](docs/BACKUP.md)** - Backup and restore your .onion keys
-
-## Quick Reference
-
-### Essential Commands
-
-```bash
-# Start service
-docker compose up -d
-
-# View logs
-docker compose logs -f
-
-# Get .onion address
-cat tor_data/hidden_service/hostname
-
-# Check status
-docker compose ps
-
-# Stop service
-docker compose down
-```
-
-For detailed commands, see [Management Guide](docs/MANAGEMENT.md).
+- **[Comparison Guide](docs/COMPARISON.md)** - Compare with OnionSpray and other solutions
 
 ## Generating a Vanity .onion Address
 

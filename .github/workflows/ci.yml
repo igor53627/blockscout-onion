@@ -37,12 +37,12 @@ jobs:
 
     - name: Build Docker images
       run: |
-        docker-compose build --no-cache
+        docker compose build --no-cache
         echo "✅ Docker images built successfully"
 
     - name: Start services
       run: |
-        docker-compose up -d
+        docker compose up -d
         echo "✅ Services started"
 
     - name: Wait for containers to be healthy
@@ -68,7 +68,7 @@ jobs:
 
         if [ $attempt -eq $max_attempts ]; then
           echo "❌ Containers did not become healthy in time"
-          docker-compose logs
+          docker compose logs
           exit 1
         fi
 
@@ -79,16 +79,16 @@ jobs:
           echo "✅ .onion address generated: $onion_address"
         else
           echo "❌ .onion address file not found"
-          docker-compose logs tor
+          docker compose logs tor
           exit 1
         fi
 
     - name: Check Tor bootstrap status
       run: |
         echo "Checking Tor bootstrap status..."
-        docker-compose logs tor | grep -i "bootstrapped" || true
+        docker compose logs tor | grep -i "bootstrapped" || true
 
-        if docker-compose logs tor | grep -q "Bootstrapped 100%"; then
+        if docker compose logs tor | grep -q "Bootstrapped 100%"; then
           echo "✅ Tor successfully bootstrapped to 100%"
         else
           echo "⚠️  Tor may not have fully bootstrapped yet (this can be normal in CI)"
@@ -101,7 +101,7 @@ jobs:
           echo "✅ Nginx is accessible from tor container"
         else
           echo "❌ Cannot reach nginx from tor container"
-          docker-compose logs nginx
+          docker compose logs nginx
           exit 1
         fi
 
@@ -109,7 +109,7 @@ jobs:
       run: |
         echo "Checking for critical errors in logs..."
 
-        if docker-compose logs | grep -i "error" | grep -v "error_log" | grep -v "X-Error"; then
+        if docker compose logs | grep -i "error" | grep -v "error_log" | grep -v "X-Error"; then
           echo "⚠️  Found errors in logs (review above)"
         else
           echo "✅ No critical errors found in logs"
@@ -119,19 +119,19 @@ jobs:
       if: always()
       run: |
         echo "=== Container Status ==="
-        docker-compose ps
+        docker compose ps
 
         echo ""
         echo "=== Tor Logs (last 30 lines) ==="
-        docker-compose logs --tail=30 tor
+        docker compose logs --tail=30 tor
 
         echo ""
         echo "=== Nginx Logs (last 30 lines) ==="
-        docker-compose logs --tail=30 nginx
+        docker compose logs --tail=30 nginx
 
     - name: Stop services
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
     - name: Export Tor keys to secrets (instructions)
       if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -5,11 +5,16 @@ A lightweight, production-ready setup to expose any HTTP service as a Tor hidden
 ## Architecture Flowchart
 
 ```mermaid
-flowchart LR
-    A[Tor Browser User] -->|.onion request| B[Tor Network]
-    B -->|routed to| C[Tor Container<br/>Port 80]
-    C -->|forwards to| D[Nginx Container<br/>Port 8080]
-    D -->|HTTP proxy| E[Remote Service<br/>e.g., Blockscout at 5.9.87.214:80<br/>or RPC at :8545]
+flowchart TD
+    A["👤 Tor Browser User"] -->|".onion request"| B["🌐 Tor Network"]
+    B -->|"Routes traffic via<br/>Tor hidden service protocol"| C["🐳 Tor Container<br/>(Port 80)<br/>━━━━━━━━━━━━━━<br/>Runs tor daemon<br/>Manages .onion address"]
+    C -->|"Forwards to internal network"| D["🐳 Nginx Container<br/>(Port 8080)<br/>━━━━━━━━━━━━━━<br/>Reverse proxy<br/>HTTP traffic handler"]
+    D -->|"HTTP proxy request"| E["🌍 Remote Service<br/>━━━━━━━━━━━━━━<br/>Blockscout: 5.9.87.214:80<br/>or RPC Provider: :8545<br/>or any HTTP service"]
+
+    E -->|"Response"| D
+    D -->|"Response"| C
+    C -->|"Via Tor network"| B
+    B -->|"Response"| A
 ```
 
 ## Features

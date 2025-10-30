@@ -1,20 +1,37 @@
 services:
-  tor-hidden-service:
-    build: .
-    container_name: blockscout-tor-bridge
+  tor:
+    build:
+      context: .
+      dockerfile: Dockerfile.tor
+    container_name: blockscout-tor
     restart: unless-stopped
     volumes:
-      - ./hidden_service:/var/lib/tor/hidden_service
-    ports:
-      - "9050:9050"  # SOCKS proxy (optional)
-      - "9051:9051"  # Control port (optional)
+      - ./tor_data:/var/lib/tor
+    networks:
+      - tor-network
+    depends_on:
+      - nginx
+    healthcheck:
+      test: ["CMD", "pgrep", "tor"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    container_name: blockscout-nginx
+    restart: unless-stopped
     networks:
       - tor-network
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--socks5-hostname", "localhost:9050", "http://check.torproject.org"]
-      interval: 60s
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8080/status"]
+      interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 5s
 
 networks:
   tor-network:

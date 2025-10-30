@@ -2,9 +2,8 @@
 # This configuration sets up Tor as a relay to expose eth.blockscout.com as a hidden service
 
 # Run as a client only (no exit node, no relay)
-# Enable SOCKS5 proxy for testing
-SocksPort 0.0.0.0:9050
-ControlPort 9051
+# Disable SOCKS5 proxy (incompatible with single-hop mode)
+SocksPort 0
 
 # Explicitly disable relay and exit functionality
 ORPort 0
@@ -14,8 +13,8 @@ ExitPolicy reject *:*
 
 # Hidden service configuration
 HiddenServiceDir /var/lib/tor/hidden_service/
-# Forward to local socat proxy which handles HTTPS
-HiddenServicePort 80 127.0.0.1:8080
+# Forward to nginx container
+HiddenServicePort 80 nginx:8080
 
 # Security settings
 HiddenServiceVersion 3
@@ -23,9 +22,9 @@ HiddenServiceVersion 3
 # Performance optimization (reduces latency but removes location anonymity)
 # WARNING: These settings expose your server's IP to determined adversaries
 # Only use if you don't need to hide the server location
-# NOTE: Disabled when SOCKS5 is enabled (incompatible)
-#HiddenServiceSingleHopMode 1
-#HiddenServiceNonAnonymousMode 1
+# Reduces circuit from 6 hops to 3+1 hops (significant latency improvement)
+HiddenServiceSingleHopMode 1
+HiddenServiceNonAnonymousMode 1
 
 # Logging
 Log notice stdout

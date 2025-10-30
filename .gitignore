@@ -1,5 +1,6 @@
-# Hidden service keys - DO NOT COMMIT
+# Hidden service keys and Tor data - DO NOT COMMIT
 hidden_service/
+tor_data/
 *.key
 hs_ed25519_secret_key
 hs_ed25519_public_key

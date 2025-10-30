@@ -215,10 +215,6 @@ docker compose logs -f tor | grep -i bootstrap
 
 ## Advanced Operations
 
-### Scale Services (Not Applicable)
-
-This setup uses named containers and specific networking, so scaling is not supported. For load balancing, consider using [OnionSpray](https://gitlab.torproject.org/tpo/onion-services/onionspray).
-
 ### Export Logs
 
 ```bash
@@ -234,45 +230,11 @@ docker compose logs tor > tor_logs_$(date +%Y%m%d).txt
 ```bash
 # View network details
 docker network inspect blockscout-onion_tor-network
-
-# List containers on network
-docker network inspect blockscout-onion_tor-network | grep -A 5 Containers
 ```
 
-## Production Recommendations
+## Production Tips
 
-1. **Use a process manager**: Consider systemd or supervisor to manage `docker compose`
-2. **Set up log rotation**: Configure Docker's logging driver to prevent disk fill
-3. **Monitor health**: Set up alerts for container health status
-4. **Automate backups**: Use cron to backup `.onion` keys regularly
-5. **Update regularly**: Keep Docker and base images updated
-
-## Systemd Service Example
-
-Create `/etc/systemd/system/blockscout-onion.service`:
-
-```ini
-[Unit]
-Description=Blockscout Tor Hidden Service
-Requires=docker.service
-After=docker.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/path/to/blockscout-onion
-ExecStart=/usr/bin/docker compose up -d
-ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=0
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-
-```bash
-sudo systemctl enable blockscout-onion
-sudo systemctl start blockscout-onion
-sudo systemctl status blockscout-onion
-```
+- Set up log rotation to prevent disk fill
+- Automate backups with cron (see [BACKUP.md](BACKUP.md))
+- Keep Docker and base images updated
+- Monitor container health regularly

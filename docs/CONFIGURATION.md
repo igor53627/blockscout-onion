@@ -108,213 +108,28 @@ If you need location anonymity, remove these lines from `torrc`:
 
 ## Nginx Configuration
 
-### Add Custom Headers
-
-In `nginx.conf`, inside the `location /` block:
-
-```nginx
-# Add security headers
-add_header X-Frame-Options "SAMEORIGIN" always;
-add_header X-Content-Type-Options "nosniff" always;
-add_header Referrer-Policy "no-referrer" always;
-```
-
-### Enable Rate Limiting
-
-Add to `http` block in `nginx.conf`:
-
-```nginx
-# Define rate limit zone
-limit_req_zone $binary_remote_addr zone=one:10m rate=10r/s;
-
-# Apply in location block
-location / {
-    limit_req zone=one burst=20;
-    # ... rest of proxy config
-}
-```
-
-### Add Basic Authentication
-
-```nginx
-location / {
-    auth_basic "Restricted Access";
-    auth_basic_user_file /etc/nginx/.htpasswd;
-    # ... rest of proxy config
-}
-```
-
-Then create password file inside nginx container.
-
-### Custom Error Pages
-
-```nginx
-error_page 502 503 504 /50x.html;
-location = /50x.html {
-    root /var/www/html;
-    internal;
-}
-```
-
 ### WebSocket Configuration
 
-Already included, but can be customized:
+WebSocket support is already included. If you need to adjust timeouts:
 
 ```nginx
-# Increase WebSocket timeout
 proxy_read_timeout 3600s;
 proxy_send_timeout 3600s;
-
-# WebSocket headers (already present)
-proxy_http_version 1.1;
-proxy_set_header Upgrade $http_upgrade;
-proxy_set_header Connection $connection_upgrade;
 ```
 
-## Docker Compose Configuration
+## Applying Changes
 
-### Change Container Names
+After modifying configuration files:
 
-Edit `docker-compose.yml`:
-
-```yaml
-services:
-  tor:
-    container_name: my-custom-tor-name
-  nginx:
-    container_name: my-custom-nginx-name
-```
-
-### Add Environment Variables
-
-```yaml
-services:
-  tor:
-    environment:
-      - TZ=America/New_York
-      - DEBUG=1
-```
-
-### Modify Resource Limits
-
-```yaml
-services:
-  tor:
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-```
-
-### Add Additional Volumes
-
-```yaml
-services:
-  nginx:
-    volumes:
-      - ./custom_html:/var/www/html
-      - ./custom_nginx_config:/etc/nginx/conf.d
-```
-
-## Port Configuration
-
-### Expose Ports to Host
-
-If you need to access containers directly from the host:
-
-```yaml
-services:
-  nginx:
-    ports:
-      - "8080:8080"  # Expose nginx on host:8080
-```
-
-**Warning**: Only do this for testing. Don't expose ports in production.
-
-## Network Configuration
-
-### Use External Network
-
-```yaml
-networks:
-  tor-network:
-    external: true
-    name: my-existing-network
-```
-
-### Configure Network Driver Options
-
-```yaml
-networks:
-  tor-network:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: br-tor
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
-```
-
-## Health Check Configuration
-
-### Adjust Health Check Intervals
-
-```yaml
-services:
-  tor:
-    healthcheck:
-      interval: 60s      # Check every 60 seconds
-      timeout: 15s       # 15 second timeout
-      retries: 5         # Retry 5 times
-      start_period: 30s  # Wait 30s before first check
-```
-
-### Custom Health Check Commands
-
-```yaml
-services:
-  nginx:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/status"]
-      interval: 30s
-```
-
-## Applying Configuration Changes
-
-After making changes:
-
-1. **For `torrc` or `nginx.conf` changes**:
 ```bash
+# Rebuild and restart
 docker compose up -d --build
-```
 
-2. **For `docker-compose.yml` changes**:
-```bash
+# Or just restart if only docker-compose.yml changed
 docker compose up -d
 ```
 
-3. **For runtime nginx changes** (if nginx supports reload):
+**Pro tip**: Test nginx config before applying:
 ```bash
-docker exec blockscout-nginx nginx -s reload
+docker exec blockscout-nginx nginx -t
 ```
-
-## Configuration Best Practices
-
-1. **Test before deploying**: Use `nginx -t` to test nginx config
-2. **Keep backups**: Backup configurations before major changes
-3. **Use version control**: Track configuration changes in git
-4. **Document custom changes**: Add comments to explain modifications
-5. **Start simple**: Only add complexity when needed
-6. **Monitor after changes**: Watch logs after configuration updates
-
-## Configuration Templates
-
-See the `examples/` directory (if created) for configuration templates for:
-- Different types of services (RPC, API, static sites)
-- Security hardening
-- Performance optimization
-- Multiple hidden services

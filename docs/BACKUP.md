@@ -145,32 +145,18 @@ docker compose logs tor | grep "Using existing"
 ### Recommended Storage Options
 
 1. **Offline USB Drive**
-   - Pros: Air-gapped, physically secure
-   - Cons: Can be lost or damaged
+   - Air-gapped, physically secure
    - Best for: Home/small deployments
 
 2. **Encrypted Cloud Storage**
-   - Pros: Always accessible, redundant
-   - Cons: Requires strong encryption
-   - Best for: Distributed teams
-   - Examples: Encrypted AWS S3, encrypted Dropbox
+   - Always accessible, redundant
+   - Examples: Encrypted Dropbox, Google Drive
 
-3. **Password Manager** (for small keys)
-   - Pros: Encrypted, accessible, backed up
-   - Cons: Limited to small files
-   - Best for: Personal projects
+3. **Password Manager**
+   - For small key files
    - Examples: 1Password, Bitwarden (attach files)
 
-4. **Hardware Security Module (HSM)**
-   - Pros: Maximum security
-   - Cons: Expensive, complex
-   - Best for: High-value production services
-
-5. **Multiple Locations**
-   - **Best practice**: 3-2-1 rule
-     - **3** copies of data
-     - **2** different storage types
-     - **1** off-site backup
+**Best practice**: Keep at least 2 copies in different locations
 
 ### What NOT to Do
 
@@ -203,84 +189,19 @@ rm -rf /tmp/backup_test
 
 **Schedule**: Test restores monthly or quarterly.
 
-## Disaster Recovery Plan
+## Disaster Recovery
 
-### Scenario 1: Server Failure
+If you lose access to your keys:
 
-1. Provision new server
-2. Install Docker and Docker Compose
-3. Clone repository
-4. Restore backup to `tor_data/hidden_service/`
-5. Fix permissions
-6. Start service: `docker compose up -d`
-7. Verify .onion address matches
+1. **Stop the service**: `docker compose down`
+2. **Restore from backup**: Follow restore procedure above
+3. **Fix permissions**: `chmod 700 tor_data/hidden_service && chmod 600 tor_data/hidden_service/*`
+4. **Restart**: `docker compose up -d`
+5. **Verify**: Check logs show "Using existing hidden service keys"
 
-### Scenario 2: Accidental Deletion
+## Important Reminders
 
-1. Stop services: `docker compose down`
-2. Restore from most recent backup
-3. Fix permissions
-4. Restart: `docker compose up -d`
-5. Verify in logs: "Using existing hidden service keys"
-
-### Scenario 3: Corrupted Keys
-
-If keys are corrupted but you have backup:
-
-1. Stop service
-2. Delete corrupted keys: `rm -rf tor_data/hidden_service/*`
-3. Restore from backup
-4. Fix permissions
-5. Restart service
-
-## Security Considerations
-
-### Protecting Backups
-
-1. **Always encrypt backups** containing secret keys
-2. **Use strong passphrases**: At least 20 characters, random
-3. **Separate encryption key from backup**: Don't store passphrase with backup
-4. **Verify backup integrity**: Check checksums
-5. **Secure transport**: Use SCP/SFTP, not FTP or unencrypted channels
-
-### Access Control
-
-```bash
-# Restrict access to backup directory
-chmod 700 /secure/backup/location
-
-# Encrypt backup with strong cipher
-gpg -c --cipher-algo AES256 --s2k-digest-algo SHA512
-
-# Set up backup rotation to limit exposure window
-```
-
-## Backup Checklist
-
-Before deploying to production, ensure:
-
-- [ ] Backup procedure documented
-- [ ] Automated backup script configured
-- [ ] Backups stored in at least 2 locations
-- [ ] At least one off-site backup exists
-- [ ] Restore procedure tested successfully
-- [ ] Team members know how to restore
-- [ ] Backup encryption passphrase stored securely
-- [ ] Backup monitoring/alerts configured
-
-## Emergency Contact
-
-In case of lost keys without backup:
-
-1. There is **no recovery possible**
-2. You must generate a new .onion address
-3. You'll need to notify all users of the new address
-4. Old .onion address is **permanently lost**
-
-**Prevention is the only cure** - backup early, backup often!
-
-## Additional Resources
-
-- [Tor Project: Hidden Services Best Practices](https://community.torproject.org/onion-services/advanced/dos/)
-- [GPG Encryption Guide](https://www.gnupg.org/gph/en/manual.html)
-- 3-2-1 Backup Strategy: [link](https://www.backblaze.com/blog/the-3-2-1-backup-strategy/)
+- ⚠️ **No backup = No recovery** - Lost keys are permanent
+- 🔐 **Always encrypt backups** containing secret keys
+- 📍 **Store in 2+ locations** - Don't rely on a single backup
+- ✅ **Test your backups** - Verify you can actually restore

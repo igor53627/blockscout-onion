@@ -164,100 +164,35 @@ Open Tor Browser and visit:
 - Main service: `http://your-address.onion`
 - Status page: `http://your-address.onion/status`
 
-## Debugging & Troubleshooting
+## Documentation
 
-### Check Container Logs
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Debugging, logs, common issues
+- **[Management Commands](docs/MANAGEMENT.md)** - Start, stop, restart, monitor
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Customize Tor, Nginx, Docker settings
+- **[Backup Guide](docs/BACKUP.md)** - Backup and restore your .onion keys
 
-```bash
-# View all logs with live updates
-docker-compose logs -f
+## Quick Reference
 
-# View Tor logs only
-docker-compose logs -f tor
-
-# View Nginx logs only
-docker-compose logs -f nginx
-
-# View last 50 lines
-docker-compose logs --tail=50
-```
-
-### Wait for .onion Propagation
-
-After starting, your .onion address needs to propagate through the Tor network. This typically takes **30-60 seconds**.
-
-**Check propagation status** in Tor logs:
-```bash
-docker-compose logs tor | grep -i "bootstrapped"
-```
-
-You should see:
-```
-Bootstrapped 0% (starting): Starting
-Bootstrapped 5% (conn): Connecting to a relay
-...
-Bootstrapped 100% (done): Done
-```
-
-**After 100% bootstrap**, check for successful descriptor publishing:
-```bash
-docker-compose logs tor | grep -i "descriptor"
-```
-
-Look for messages like:
-```
-[notice] Uploaded rendezvous descriptor
-```
-
-### Test the Status Page
-
-The setup includes a `/status` endpoint to verify the proxy is working:
+### Essential Commands
 
 ```bash
-# From your host machine
-curl -x socks5h://localhost:9050 http://your-address.onion/status
+# Start service
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Get .onion address
+cat tor_data/hidden_service/hostname
+
+# Check status
+docker compose ps
+
+# Stop service
+docker compose down
 ```
 
-Or visit in Tor Browser:
-
-**Status Page:**
-![Status Page Screenshot](public/status.png)
-
-**Blockscout via Onion:**
-![Blockscout Screenshot](public/blockscout.png)
-
-### Common Issues
-
-**Issue**: Container immediately exits
-```bash
-# Check logs for errors
-docker-compose logs tor
-docker-compose logs nginx
-
-# Verify file permissions
-ls -la tor_data/hidden_service/
-```
-
-**Issue**: Can't connect to .onion address
-```bash
-# Verify bootstrap completed
-docker-compose logs tor | grep "100%"
-
-# Check if nginx is reachable from tor container
-docker exec blockscout-tor wget -O- http://nginx:8080/status
-
-# Verify containers are healthy
-docker-compose ps
-```
-
-**Issue**: Proxy returns errors
-```bash
-# Test upstream connectivity from nginx container
-docker exec blockscout-nginx wget -O- http://5.9.87.214:80 | head
-
-# Check nginx error logs
-docker-compose logs nginx | grep error
-```
+For detailed commands, see [Management Guide](docs/MANAGEMENT.md).
 
 ## Generating a Vanity .onion Address
 
@@ -341,62 +276,6 @@ chmod 600 tor_data/hidden_service/*
 docker-compose restart
 ```
 
-## Management Commands
-
-```bash
-# Start the service
-docker-compose up -d
-
-# Stop the service
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Restart the service
-docker-compose restart
-
-# Rebuild after configuration changes
-docker-compose up -d --build
-
-# Check container status and health
-docker-compose ps
-
-# Enter a container for debugging
-docker exec -it blockscout-tor sh
-docker exec -it blockscout-nginx sh
-```
-
-## Configuration
-
-### Modify Target Service
-
-Edit `nginx.conf` line 35-37:
-
-```nginx
-upstream blockscout {
-    server your-rpc-provider.com:8545;  # RPC example
-    # OR
-    server your-dapp.com:80;            # Static site example
-}
-```
-
-### Adjust Tor Settings
-
-Edit `torrc` to customize:
-- Logging level (`Log notice stdout` → `Log debug stdout`)
-- Port mappings
-- Add multiple hidden services
-
-Example for multiple services:
-```
-HiddenServiceDir /var/lib/tor/service1/
-HiddenServicePort 80 nginx:8080
-
-HiddenServiceDir /var/lib/tor/service2/
-HiddenServicePort 80 other-app:3000
-```
-
 ## Security Considerations
 
 ### What This Setup Provides
@@ -411,13 +290,10 @@ HiddenServicePort 80 other-app:3000
 - Rate limiting (add to nginx.conf if needed)
 
 ### Recommendations
-- **Backup your keys regularly**:
-  ```bash
-  tar -czf hidden_service_backup_$(date +%Y%m%d).tar.gz tor_data/hidden_service/
-  ```
-- **Monitor logs** for suspicious activity
-- **Keep containers updated**: `docker-compose pull && docker-compose up -d`
-- **Use vanity addresses** for better trust verification
+- **Backup your keys regularly**: See [Backup Guide](docs/BACKUP.md)
+- **Monitor logs** for suspicious activity: See [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
+- **Keep containers updated**: See [Management Guide](docs/MANAGEMENT.md)
+- **Customize configuration**: See [Configuration Guide](docs/CONFIGURATION.md)
 
 ## Use Cases
 
@@ -428,25 +304,6 @@ This setup is perfect for:
 - **Indexer APIs**: GraphQL endpoints, REST APIs
 - **Development Services**: Testing apps over Tor
 - **Mirror Services**: Provide Tor access to existing HTTP services
-
-## Backup Your Keys
-
-Your .onion address is cryptographically tied to your keys. **Losing them means losing your address permanently.**
-
-```bash
-# Create encrypted backup
-tar -czf - tor_data/hidden_service/ | \
-  gpg -c > hidden_service_backup_$(date +%Y%m%d).tar.gz.gpg
-
-# Restore from backup
-gpg -d hidden_service_backup_20251030.tar.gz.gpg | \
-  tar -xzf - -C .
-```
-
-Store backups:
-- Offline secure location
-- Password manager (for small key files)
-- Hardware security module (for production)
 
 ## Contributing
 

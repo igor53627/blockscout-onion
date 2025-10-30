@@ -18,15 +18,22 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Restore existing Tor keys (if available)
-      if: ${{ secrets.TOR_HOSTNAME != '' }}
+      env:
+        TOR_HOSTNAME: ${{ secrets.TOR_HOSTNAME }}
+        TOR_PUBLIC_KEY: ${{ secrets.TOR_PUBLIC_KEY }}
+        TOR_SECRET_KEY: ${{ secrets.TOR_SECRET_KEY }}
       run: |
-        mkdir -p tor_data/hidden_service
-        echo "${{ secrets.TOR_HOSTNAME }}" > tor_data/hidden_service/hostname
-        echo "${{ secrets.TOR_PUBLIC_KEY }}" | base64 -d > tor_data/hidden_service/hs_ed25519_public_key
-        echo "${{ secrets.TOR_SECRET_KEY }}" | base64 -d > tor_data/hidden_service/hs_ed25519_secret_key
-        chmod 700 tor_data/hidden_service
-        chmod 600 tor_data/hidden_service/*
-        echo "✅ Loaded existing Tor keys from secrets"
+        if [ -n "$TOR_HOSTNAME" ] && [ -n "$TOR_PUBLIC_KEY" ] && [ -n "$TOR_SECRET_KEY" ]; then
+          mkdir -p tor_data/hidden_service
+          echo "$TOR_HOSTNAME" > tor_data/hidden_service/hostname
+          echo "$TOR_PUBLIC_KEY" | base64 -d > tor_data/hidden_service/hs_ed25519_public_key
+          echo "$TOR_SECRET_KEY" | base64 -d > tor_data/hidden_service/hs_ed25519_secret_key
+          chmod 700 tor_data/hidden_service
+          chmod 600 tor_data/hidden_service/*
+          echo "✅ Loaded existing Tor keys from secrets"
+        else
+          echo "ℹ️  No Tor keys configured in secrets, will generate new keys"
+        fi
 
     - name: Build Docker images
       run: |

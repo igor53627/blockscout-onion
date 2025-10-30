@@ -79,8 +79,9 @@ jobs:
         attempt=0
 
         while [ $attempt -lt $max_attempts ]; do
-          if [ -f tor_data/hidden_service/hostname ]; then
-            onion_address=$(cat tor_data/hidden_service/hostname)
+          # Read directly from container to avoid host permission issues
+          if docker exec blockscout-tor test -f /var/lib/tor/hidden_service/hostname 2>/dev/null; then
+            onion_address=$(docker exec blockscout-tor cat /var/lib/tor/hidden_service/hostname)
             echo "✅ .onion address generated: $onion_address"
             exit 0
           fi
@@ -91,20 +92,6 @@ jobs:
         done
 
         echo "❌ .onion address file not created after $((max_attempts * 2)) seconds"
-        echo ""
-        echo "=== Debug: Checking file locations ==="
-        echo "Host tor_data directory:"
-        ls -la tor_data/ || echo "tor_data directory not found"
-        echo ""
-        echo "Host tor_data/hidden_service directory:"
-        ls -la tor_data/hidden_service/ || echo "hidden_service directory not found"
-        echo ""
-        echo "Inside container /var/lib/tor:"
-        docker exec blockscout-tor ls -la /var/lib/tor/ || echo "Failed to list"
-        echo ""
-        echo "Inside container /var/lib/tor/hidden_service:"
-        docker exec blockscout-tor ls -la /var/lib/tor/hidden_service/ || echo "Failed to list"
-        echo ""
         echo "=== Tor logs ==="
         docker compose logs tor
         exit 1
@@ -141,6 +128,24 @@ jobs:
           echo "✅ No critical errors found in logs"
         fi
 
+    - name: Export Tor keys to secrets (instructions)
+      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        echo "📝 To use persistent .onion address in CI, add these secrets to your repository:"
+        echo ""
+        echo "TOR_HOSTNAME:"
+        docker exec blockscout-tor cat /var/lib/tor/hidden_service/hostname
+        echo ""
+        echo "TOR_PUBLIC_KEY (base64):"
+        docker exec blockscout-tor cat /var/lib/tor/hidden_service/hs_ed25519_public_key | base64 -w 0
+        echo ""
+        echo ""
+        echo "TOR_SECRET_KEY (base64):"
+        docker exec blockscout-tor cat /var/lib/tor/hidden_service/hs_ed25519_secret_key | base64 -w 0
+        echo ""
+        echo ""
+        echo "Add these at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+
     - name: Display service status
       if: always()
       run: |
@@ -158,19 +163,3 @@ jobs:
     - name: Stop services
       if: always()
       run: docker compose down -v
-
-    - name: Export Tor keys to secrets (instructions)
-      if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        echo "📝 To use persistent .onion address in CI, add these secrets to your repository:"
-        echo ""
-        echo "TOR_HOSTNAME:"
-        cat tor_data/hidden_service/hostname
-        echo ""
-        echo "TOR_PUBLIC_KEY (base64):"
-        base64 -w 0 tor_data/hidden_service/hs_ed25519_public_key
-        echo ""
-        echo "TOR_SECRET_KEY (base64):"
-        base64 -w 0 tor_data/hidden_service/hs_ed25519_secret_key
-        echo ""
-        echo "Add these at: https://github.com/${{ github.repository }}/settings/secrets/actions"

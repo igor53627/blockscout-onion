@@ -394,22 +394,6 @@ HiddenServiceDir /var/lib/tor/service2/
 HiddenServicePort 80 other-app:3000
 ```
 
-### Performance Tuning
-
-For high-traffic services, adjust `nginx.conf`:
-
-```nginx
-worker_processes auto;  # Use all CPU cores
-
-events {
-    worker_connections 2048;  # Increase from 1024
-}
-
-# Add to http block:
-keepalive_timeout 65;
-keepalive_requests 100;
-```
-
 ## Security Considerations
 
 ### What This Setup Provides

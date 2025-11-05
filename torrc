@@ -31,3 +31,7 @@ Log notice stdout
 
 # Additional security options
 SafeLogging 1
+
+# Performance: reduce disk I/O
+# Note: Hidden service keys will still be written to disk for persistence
+AvoidDiskWrites 1

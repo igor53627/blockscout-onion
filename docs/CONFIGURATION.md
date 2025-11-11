@@ -117,6 +117,15 @@ proxy_read_timeout 3600s;
 proxy_send_timeout 3600s;
 ```
 
+### Onion-Location Header (Clearnet Server)
+
+If you want to advertise your .onion address to Tor Browser users on your clearnet site, see the dedicated guide:
+
+- **[Onion-Location Header Guide](ONION-LOCATION.md)** - Complete documentation
+- **[nginx-clearnet-example.conf](../nginx-clearnet-example.conf)** - Example configuration
+
+**Important**: Onion-Location header is configured on your **clearnet server**, not the onion service container created by this project.
+
 ## Applying Changes
 
 After modifying configuration files:

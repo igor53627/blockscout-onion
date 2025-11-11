@@ -28,6 +28,7 @@ flowchart TD
 - **Persistent Keys**: Supports using existing .onion addresses
 - **Production-Ready**: Automatic restarts, health checks, and proper logging
 - **Security-Focused**: Explicitly disables exit relay and control port to prevent abuse
+- **Onion-Location Ready**: Built-in support for advertising .onion on clearnet sites
 - **CI/CD Ready**: GitHub Actions workflow for automated testing ([see CI.md](CI.md))
 
 ## Why This Approach?
@@ -145,6 +146,17 @@ Open Tor Browser and visit:
 - Main service: `http://your-address.onion`
 - Status page: `http://your-address.onion/status`
 
+### 6. (Optional) Advertise on Clearnet
+
+To make Tor Browser users aware of your .onion service when they visit your clearnet site, add the **Onion-Location** header to your clearnet nginx server:
+
+```nginx
+# On your clearnet server (not this onion service)
+add_header Onion-Location http://your-address.onion$request_uri always;
+```
+
+See the **[Onion-Location Header Guide](docs/ONION-LOCATION.md)** for complete implementation details and examples.
+
 ## Documentation
 
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Debugging, logs, common issues
@@ -152,6 +164,7 @@ Open Tor Browser and visit:
 - **[Configuration Guide](docs/CONFIGURATION.md)** - Customize Tor, Nginx, Docker settings
 - **[Backup Guide](docs/BACKUP.md)** - Backup and restore your .onion keys
 - **[Comparison Guide](docs/COMPARISON.md)** - Compare with OnionSpray and other solutions
+- **[Onion-Location Header Guide](docs/ONION-LOCATION.md)** - Advertise your .onion on clearnet sites
 
 ## Generating a Vanity .onion Address
 

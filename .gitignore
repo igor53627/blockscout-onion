@@ -15,5 +15,13 @@ hs_ed25519_public_key
 # OS files
 .DS_Store
 Thumbs.db
+
+# Node modules and dependencies
+node_modules/
+package-lock.json
+
+# Testing
+coverage/
+
 # Testing SSH signing
 # SSH signing configured
